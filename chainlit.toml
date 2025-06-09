@@ -1,0 +1,5 @@
+[UI]
+name = "DUT Chatbot"
+
+[features]
+data_persistence = true

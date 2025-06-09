@@ -1,0 +1,67 @@
+# Hướng dẫn cài đặt môi trường và chạy dự án
+
+## 1. Cài đặt và chạy Jupyter Notebook
+
+### Cài đặt Jupyter Notebook
+```bash
+pip install notebook
+```
+
+### Kiểm tra Jupyter Notebook đã được cài đặt hay chưa
+```bash
+which jupyter
+```
+
+### Chạy Jupyter Notebook
+```bash
+PYTHONPATH=/home/v1nh/v1nh/chatbot jupyter notebook
+```
+
+### Nếu gặp lỗi khi chạy Jupyter
+```bash
+python -m ipykernel install --user --name=venv --display-name "Python (venv)"
+```
+
+## 2. Chạy tất cả container Docker
+```bash
+docker start $(docker ps -aq)
+```
+
+## 3. Cài đặt môi trường ảo (venv)
+
+### Cập nhật hệ thống và cài đặt `venv`
+```bash
+sudo apt update
+sudo apt install python3.12-venv -y  # Nếu bạn dùng Python 3.12
+```
+
+### Tạo và kích hoạt môi trường ảo
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+## 4. Cài đặt thư viện cần thiết
+```bash
+pip install sentence-transformers torch
+pip install --upgrade chainlit
+pip install --upgrade chainlit torch sentence-transformers
+
+```
+
+## 5. Cài đặt và tải mô hình Ollama
+
+### Tải và cài đặt Ollama
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+### Kéo mô hình `nomic-embed-text:v1.5`
+```bash
+ollama pull nomic-embed-text:v1.5
+```
+
+
+
+---
+Sau khi hoàn thành các bước trên, bạn có thể bắt đầu sử dụng Jupyter Notebook và mô hình embedding trong môi trường của mình.

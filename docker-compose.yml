@@ -1,0 +1,676 @@
+# # version: "3.5"
+
+# # services:
+# #   etcd:
+# #     image: quay.io/coreos/etcd:v3.5.9
+# #     container_name: etcd
+# #     restart: always
+# #     environment:
+# #       - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+# #       - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+# #       - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+# #       - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd:2380
+# #       - ETCD_INITIAL_CLUSTER=default=http://etcd:2380
+# #       - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster
+# #       - ETCD_DATA_DIR=/etcd-data
+# #     volumes:
+# #       - etcd_data:/etcd-data
+# #     ports:
+# #       - "2379:2379"
+# #       - "2380:2380"
+# #     networks:
+# #       - milvus_network
+# #     healthcheck:
+# #       test: ["CMD-SHELL", "ETCDCTL_API=3 etcdctl endpoint health"]
+# #       interval: 10s
+# #       timeout: 5s
+# #       retries: 5
+
+# #   milvus:
+# #     image: milvusdb/milvus:v2.3.3
+# #     container_name: milvus
+# #     restart: always
+# #     environment:
+# #       - ETCD_ENDPOINTS=etcd:2379
+# #     command: ["milvus", "run", "standalone"]
+# #     ports:
+# #       - "19530:19530"
+# #       - "9091:9091"
+# #     depends_on:
+# #       - etcd
+# #     volumes:
+# #       - milvus_data:/var/lib/milvus
+# #     networks:
+# #       - milvus_network
+
+# #   minio:
+# #     image: minio/minio:latest
+# #     container_name: minio
+# #     restart: always
+# #     environment:
+# #       - MINIO_ROOT_USER=minioadmin
+# #       - MINIO_ROOT_PASSWORD=minioadmin
+# #     command: server /data --console-address ":9001"
+# #     ports:
+# #       - "9000:9000"
+# #       - "9001:9001"
+# #     volumes:
+# #       - minio_data:/data
+# #     networks:
+# #       - milvus_network
+
+# # networks:
+# #   milvus_network:
+# #     driver: bridge
+
+# # volumes:
+# #   etcd_data:
+# #   milvus_data:
+# #   minio_data:
+# version: "3.5"
+
+# services:
+#   etcd:
+#     image: quay.io/coreos/etcd:v3.5.9
+#     container_name: etcd
+#     restart: always
+#     environment:
+#       - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+#       - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+#       - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+#       - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd:2380
+#       - ETCD_INITIAL_CLUSTER=default=http://etcd:2380
+#       - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster
+#       - ETCD_DATA_DIR=/etcd-data
+#     volumes:
+#       - etcd_data:/etcd-data
+#     ports:
+#       - "2379:2379"
+#       - "2380:2380"
+#     networks:
+#       - milvus_network
+#     healthcheck:
+#       test: ["CMD", "etcdctl", "endpoint", "health"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   milvus:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus
+#     restart: always
+#     environment:
+#       - ETCD_ENDPOINTS=etcd:2379
+#     command: ["milvus", "run", "cluster"] # Chạy Milvus ở chế độ cluster
+#     ports:
+#       - "19530:19530"
+#       - "9091:9091"
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     volumes:
+#       - milvus_data:/var/lib/milvus
+#     networks:
+#       - milvus_network
+
+#   querycoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-querycoord
+#     restart: always
+#     command: ["milvus", "run", "querycoord"]
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   datacoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-datacoord
+#     restart: always
+#     command: ["milvus", "run", "datacoord"]
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   rootcoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-rootcoord
+#     restart: always
+#     command: ["milvus", "run", "rootcoord"]
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   indexcoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-indexcoord
+#     restart: always
+#     command: ["milvus", "run", "indexcoord"]
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   proxy:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-proxy
+#     restart: always
+#     command: ["milvus", "run", "proxy"]
+#     ports:
+#       - "19530:19530"
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   minio:
+#     image: minio/minio:latest
+#     container_name: minio
+#     restart: always
+#     environment:
+#       - MINIO_ROOT_USER=minioadmin
+#       - MINIO_ROOT_PASSWORD=minioadmin
+#     command: server /data --console-address ":9001"
+#     ports:
+#       - "9000:9000"
+#       - "9001:9001"
+#     volumes:
+#       - minio_data:/data
+#     networks:
+#       - milvus_network
+
+# networks:
+#   milvus_network:
+#     driver: bridge
+
+# volumes:
+#   etcd_data:
+#   milvus_data:
+#   minio_data:
+
+# services:
+#   etcd:
+#     image: quay.io/coreos/etcd:v3.5.9
+#     container_name: etcd
+#     restart: always
+#     environment:
+#       - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+#       - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+#       - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+#       - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd:2380
+#       - ETCD_INITIAL_CLUSTER=default=http://etcd:2380
+#       - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster
+#     #   - ETCD_DATA_DIR=/etcd-data
+#     # volumes:
+#     #   - etcd_data:/etcd-data
+#     ports:
+#       - "2379:2379"
+#       - "2380:2380"
+#     networks:
+#       - milvus_network
+#     healthcheck:
+#       test: ["CMD", "etcdctl", "endpoint", "health"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   proxy:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-proxy
+#     restart: always
+#     command: ["milvus", "run", "proxy"]
+#     ports:
+#       - "19530:19530" # Cổng chính để kết nối Milvus
+#       - "9091:9091"
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#       rootcoord:
+#         condition: service_started
+#       querycoord:
+#         condition: service_started
+#       datacoord:
+#         condition: service_started
+#       indexcoord:
+#         condition: service_started
+#     networks:
+#       - milvus_network
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:19530"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+
+#   rootcoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-rootcoord
+#     restart: always
+#     command: ["milvus", "run", "rootcoord"]
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   querycoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-querycoord
+#     restart: always
+#     command: ["milvus", "run", "querycoord"]
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   querynode:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-querynode
+#     restart: always
+#     command: ["milvus", "run", "querynode"]
+#     depends_on:
+#       querycoord:
+#         condition: service_started
+#     networks:
+#       - milvus_network
+
+#   datacoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-datacoord
+#     restart: always
+#     command: ["milvus", "run", "datacoord"]
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   datanode:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-datanode
+#     restart: always
+#     command: ["milvus", "run", "datanode"]
+#     depends_on:
+#       datacoord:
+#         condition: service_started
+#     networks:
+#       - milvus_network
+
+#   indexcoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-indexcoord
+#     restart: always
+#     command: ["milvus", "run", "indexcoord"]
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   indexnode:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-indexnode
+#     restart: always
+#     command: ["milvus", "run", "indexnode"]
+#     depends_on:
+#       indexcoord:
+#         condition: service_started
+#     networks:
+#       - milvus_network
+
+#   minio:
+#     image: minio/minio:latest
+#     container_name: minio
+#     restart: always
+#     environment:
+#       - MINIO_ROOT_USER=minioadmin
+#       - MINIO_ROOT_PASSWORD=minioadmin
+#     command: server /data --console-address ":9001"
+#     ports:
+#       - "9000:9000"
+#       - "9001:9001"
+#     volumes:
+#       - minio_data:/data
+#     networks:
+#       - milvus_network
+
+# networks:
+#   milvus_network:
+#     driver: bridge
+
+# volumes:
+#   etcd_data:
+#   milvus_data:
+#   minio_data:
+
+# version: "3.8"
+
+# services:
+#   etcd:
+#     image: quay.io/coreos/etcd:v3.5.9
+#     container_name: etcd
+#     restart: always
+#     environment:
+#       - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+#       - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+#       - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+#       - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://etcd:2380
+#       - ETCD_INITIAL_CLUSTER=default=http://etcd:2380
+#       - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster
+#     ports:
+#       - "2379:2379"
+#       - "2380:2380"
+#     networks:
+#       - milvus_network
+#     healthcheck:
+#       test: ["CMD", "etcdctl", "endpoint", "health"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   minio:
+#     image: minio/minio:latest
+#     container_name: minio
+#     restart: always
+#     environment:
+#       - MINIO_ROOT_USER=minioadmin
+#       - MINIO_ROOT_PASSWORD=minioadmin
+#     command: server /data --console-address ":9001"
+#     ports:
+#       - "9000:9000"
+#       - "9001:9001"
+#     volumes:
+#       - minio_data:/data
+#     networks:
+#       - milvus_network
+
+#   proxy:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-proxy
+#     restart: always
+#     command: ["milvus", "run", "proxy"]
+#     ports:
+#       - "19530:19530"
+#       - "9091:9091"
+#     environment:
+#       - ETCD_ENDPOINTS=etcd:2379
+#       - MINIO_ADDRESS=minio:9000
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#       rootcoord:
+#         condition: service_started
+#       querycoord:
+#         condition: service_started
+#       datacoord:
+#         condition: service_started
+#       indexcoord:
+#         condition: service_started
+#     networks:
+#       - milvus_network
+#     healthcheck:
+#       test: ["CMD", "grpc_health_probe", "-addr=localhost:19530"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+
+#   rootcoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-rootcoord
+#     restart: always
+#     command: ["milvus", "run", "rootcoord"]
+#     environment:
+#       - ETCD_ENDPOINTS=etcd:2379
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   querycoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-querycoord
+#     restart: always
+#     command: ["milvus", "run", "querycoord"]
+#     environment:
+#       - ETCD_ENDPOINTS=etcd:2379
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   querynode:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-querynode
+#     restart: always
+#     command: ["milvus", "run", "querynode"]
+#     environment:
+#       - ETCD_ENDPOINTS=etcd:2379
+#     depends_on:
+#       querycoord:
+#         condition: service_started
+#     networks:
+#       - milvus_network
+
+#   datacoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-datacoord
+#     restart: always
+#     command: ["milvus", "run", "datacoord"]
+#     environment:
+#       - ETCD_ENDPOINTS=etcd:2379
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   datanode:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-datanode
+#     restart: always
+#     command: ["milvus", "run", "datanode"]
+#     environment:
+#       - ETCD_ENDPOINTS=etcd:2379
+#     depends_on:
+#       datacoord:
+#         condition: service_started
+#     networks:
+#       - milvus_network
+
+#   indexcoord:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-indexcoord
+#     restart: always
+#     command: ["milvus", "run", "indexcoord"]
+#     environment:
+#       - ETCD_ENDPOINTS=etcd:2379
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#     networks:
+#       - milvus_network
+
+#   indexnode:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus-indexnode
+#     restart: always
+#     command: ["milvus", "run", "indexnode"]
+#     environment:
+#       - ETCD_ENDPOINTS=etcd:2379
+#     depends_on:
+#       indexcoord:
+#         condition: service_started
+#     networks:
+#       - milvus_network
+
+# networks:
+#   milvus_network:
+#     driver: bridge
+
+# volumes:
+#   minio_data:
+
+# version: "3.8"
+
+# services:
+#   etcd:
+#     image: quay.io/coreos/etcd:v3.5.9
+#     container_name: milvus-etcd
+#     restart: always
+#     environment:
+#       - ETCD_ADVERTISE_CLIENT_URLS=http://milvus-etcd:2379
+#       - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+#       - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+#       - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://milvus-etcd:2380
+#       - ETCD_INITIAL_CLUSTER=default=http://milvus-etcd:2380
+#       - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster
+#     ports:
+#       - "2379:2379"
+#       - "2380:2380"
+#     networks:
+#       - milvus_network
+#     healthcheck:
+#       test: ["CMD", "etcdctl", "endpoint", "health"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+#     volumes:
+#       - milvus_etcd_data:/etcd-data
+
+#   minio:
+#     image: minio/minio:latest
+#     container_name: milvus-minio
+#     restart: always
+#     environment:
+#       - MINIO_ROOT_USER=minioadmin
+#       - MINIO_ROOT_PASSWORD=minioadmin
+#     command: server /data --console-address ":9001"
+#     ports:
+#       - "9000:9000"
+#       - "9001:9001"
+#     volumes:
+#       - milvus_minio_data:/data
+#     networks:
+#       - milvus_network
+
+#   milvus:
+#     image: milvusdb/milvus:v2.3.3
+#     container_name: milvus
+#     restart: always
+#     command: ["milvus", "run", "standalone"]
+#     environment:
+#       - ETCD_ENDPOINTS=milvus-etcd:2379
+#       - MINIO_ADDRESS=milvus-minio:9000
+#     ports:
+#       - "19530:19530"
+#       - "9091:9091"
+#     depends_on:
+#       etcd:
+#         condition: service_healthy
+#       minio:
+#         condition: service_started
+#     networks:
+#       - milvus_network
+#     healthcheck:
+#       test: ["CMD", "grpc_health_probe", "-addr=localhost:19530"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+
+# networks:
+#   milvus_network:
+#     driver: bridge
+
+# volumes:
+#   milvus_etcd_data:
+#   milvus_minio_data:
+version: "3.8"
+
+services:
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.9
+    container_name: milvus-etcd
+    restart: unless-stopped
+    environment:
+      - ETCD_ADVERTISE_CLIENT_URLS=http://milvus-etcd:2379
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_LISTEN_PEER_URLS=http://0.0.0.0:2380
+      - ETCD_INITIAL_ADVERTISE_PEER_URLS=http://milvus-etcd:2380
+      - ETCD_INITIAL_CLUSTER=default=http://milvus-etcd:2380
+      - ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    networks:
+      - milvus_network
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - milvus_etcd_data:/etcd-data
+
+  minio:
+    image: minio/minio:latest
+    container_name: milvus-minio
+    restart: unless-stopped
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: ["minio", "server", "/data", "--console-address", ":9001"]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - milvus_minio_data:/data
+    networks:
+      - milvus_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  milvus:
+    image: milvusdb/milvus:v2.3.3
+    container_name: milvus
+    restart: unless-stopped
+    command: ["milvus", "run", "standalone"]
+    environment:
+      - ETCD_ENDPOINTS=milvus-etcd:2379
+      - MINIO_ADDRESS=milvus-minio:9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    depends_on:
+      etcd:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - milvus_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  milvus_network:
+    driver: bridge
+
+volumes:
+  milvus_etcd_data:
+  milvus_minio_data:
